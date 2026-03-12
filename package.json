@@ -1,16 +1,25 @@
 {
   "name": "curso-expressjs",
   "version": "1.0.0",
+  "description": "curso express.js",
+  "keywords": [],
+  "homepage": "https://github.com/Harry182/Expressjs#readme",
+  "bugs": {
+    "url": "https://github.com/Harry182/Expressjs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Harry182/Expressjs.git"
+  },
+  "license": "MIT",
+  "author": "Gudalupe Gomez <markus44p@gmail.com>",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "dev": "node --watch app.js",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "Gudalupe Gomez <markus44p@gmail.com>",
-  "license": "MIT",
-  "description": "curso express.js",
   "dependencies": {
     "dotenv": "^17.2.1",
     "express": "^5.2.1"
