@@ -1,5 +1,13 @@
 require("dotenv").config(); // si se modifica el .env es necesario reiniciar el servidor para que tome los cambios
 const express = require("express");
+const { validateUser } = require("./utils/validation");
+
+const fs = require("fs");
+const path = require("path");
+
+const usersFilePath = path.join(__dirname, "users.json");
+console.log("usersFilePath");
+
 const app = express();
 //Apartir de la version 4.16 de express ya no es necesario instalar body-parser para parsear el cuerpo de las solicitudes, ya que express incluye esta funcionalidad de forma nativa.
 // Middleware para parsear el cuerpo de las solicitudes
@@ -56,6 +64,73 @@ app.post("/api/data", (req, res) => {
   res.status(201).json({
     message: "Datos recibidos correctamente",
     data,
+  });
+});
+
+app.get("/users", (req, res) => {
+  //Conectar a la base de datos
+  fs.readFile(usersFilePath, "utf-8", (error, data) => {
+    if (error) {
+      return res.status(500).json({ Error: "Error en la conexión de datos" });
+    }
+    const users = JSON.parse(data);
+    res.json(users);
+  });
+});
+
+app.post("/users", (req, res) => {
+  const newUser = req.body;
+  //const { name, email } = req.body;
+
+  fs.readFile(usersFilePath, "utf-8", (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: "Error con conexión de Datos." });
+    }
+    const users = JSON.parse(data);
+    //const newId = users.length > 0 ? users[users.length - 1].id + 1 : 0;
+    //const newUser = { id: newId, name: name.trim(), email: email.trim() };
+    const validation = validateUser(newUser, users);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    users.push(newUser);
+    fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
+      if (err) {
+        return res.status(500).json({ error: "Error al guardar el usuario." });
+      }
+      res.status(201).json(newUser);
+    });
+  });
+});
+
+app.put("/users/:id", (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const updateUser = req.body;
+
+  fs.readFile(usersFilePath, "utf8", (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: "Error con la conexión de datos." });
+    }
+
+    let users = data.trim() === "" ? [] : JSON.parse(data);
+
+    const validation = validateUser(updateUser, users);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    users = users.map((user) =>
+      user.id === userId ? { ...user, ...updateUser } : user,
+    );
+    fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "Error al actializar el usuario" });
+      }
+      res.json(updateUser);
+    });
   });
 });
 
