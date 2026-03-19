@@ -1,6 +1,6 @@
 require("dotenv").config(); // si se modifica el .env es necesario reiniciar el servidor para que tome los cambios
 const express = require("express");
-const { validateUser } = require("./utils/validation");
+const { validateUser, isUniqueId } = require("./utils/validation");
 
 const fs = require("fs");
 const path = require("path");
@@ -87,20 +87,26 @@ app.post("/users", (req, res) => {
       return res.status(500).json({ error: "Error con conexión de Datos." });
     }
     const users = JSON.parse(data);
-    //const newId = users.length > 0 ? users[users.length - 1].id + 1 : 0;
-    //const newUser = { id: newId, name: name.trim(), email: email.trim() };
+    const validationId = isUniqueId(newUser.id, users);
     const validation = validateUser(newUser, users);
+
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
+    } else if (validationId) {
+      return res.status(400).json({
+        error: "El ID que intenta registrar ya existe.",
+      });
+    } else {
+      users.push(newUser);
+      fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
+        if (err) {
+          return res
+            .status(500)
+            .json({ error: "Error al guardar el usuario." });
+        }
+        res.status(201).json(newUser);
+      });
     }
-
-    users.push(newUser);
-    fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
-      if (err) {
-        return res.status(500).json({ error: "Error al guardar el usuario." });
-      }
-      res.status(201).json(newUser);
-    });
   });
 });
 
@@ -117,7 +123,7 @@ app.put("/users/:id", (req, res) => {
 
     const validation = validateUser(updateUser, users);
     if (!validation.isValid) {
-      return res.status(400).json({ error: validation.error });
+      return res.status(400).json({ error: validation.errors });
     }
 
     users = users.map((user) =>
