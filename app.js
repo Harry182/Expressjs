@@ -8,11 +8,13 @@ const path = require("path");
 const usersFilePath = path.join(__dirname, "users.json");
 console.log("usersFilePath");
 
+const LoggerMiddleware = require("./middlewares/logger");
 const app = express();
 //Apartir de la version 4.16 de express ya no es necesario instalar body-parser para parsear el cuerpo de las solicitudes, ya que express incluye esta funcionalidad de forma nativa.
 // Middleware para parsear el cuerpo de las solicitudes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(LoggerMiddleware);
 
 const PORT = process.env.PORT || 3000;
 console.log(PORT);
